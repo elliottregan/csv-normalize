@@ -5,6 +5,8 @@ const modules = module.exports = {
 	processDataRow,
 };
 
+let rowIndex = 0;
+
 function processHeader(columns) {
 	columns = _rowDataToArray(columns);
 
@@ -18,27 +20,39 @@ function processHeader(columns) {
 
 function processDataRow(columns) {
 
-		// Convert String to Array to process each column separately
-		columns = _rowDataToArray(columns);
+  // Convert String to Array to process each column separately
+  columns = _rowDataToArray(columns);
 
-		// Format date into ISOString
-    columns[0] = datetimeSvc.formatDate(columns[0]);
+  // Format date into ISOString
+  columns[0] = datetimeSvc.formatDate(columns[0]);
 
-    // Normalize ZIP codes to 5 digits, prefixing with '0' if less than 5 digits given.
-    columns[2] = ("00000" + columns[2]).slice(-5);
+  // Normalize ZIP codes to 5 digits, prefixing with '0' if less than 5 digits given.
+  columns[2] = ("00000" + columns[2]).slice(-5);
 
-    // Transform all Names to Uppercase characters
-    columns[3] = columns[3].toLocaleUpperCase();
+  // Transform all Names to Uppercase characters
+  columns[3] = columns[3].toLocaleUpperCase();
 
-    // Transform HH:MM:SS.MS format to number of seconds
-    columns[4] = datetimeSvc.durToSec(columns[4]);
-    columns[5] = datetimeSvc.durToSec(columns[5]);
+  // Transform HH:MM:SS.MS format to number of seconds
+  columns[4] = datetimeSvc.durToSec(columns[4]);
+  columns[5] = datetimeSvc.durToSec(columns[5]);
 
-    // Add columns 4 and 5 together. Cut sigfigs to 3 to match incoming data
-    columns[6] = (columns[5] + columns[4]).toFixed(3);
+  // Add columns 4 and 5 together. Cut sigfigs to 3 to match incoming data
+  columns[6] = datetimeSvc.addSeconds(columns[5], columns[4]);
+  
+  // Increase row counter.
+  rowIndex++;
 
+  // Only catch first error found.
+  const hasError = columns.filter(row => row.error)[0];
+  if (hasError) {
+    // log error if any are found, return empty string instead of data.
+    process.stderr.write(`ERROR FOUND in ROW ${rowIndex}: '${hasError.error}'\nRow Dropped.\n`);
+    return '';
+  }
+  else {
     // Convert Array back to String, and return
     return columns.toString();
+  }
 }
 
 // split String into Array, using comma as delimeter.
