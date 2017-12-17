@@ -1,3 +1,4 @@
+// TODO: remove dependancy in favor of only required functions.
 const moment = require('moment-timezone');
 
 const modules = module.exports = {
@@ -25,21 +26,29 @@ function formatDate(timestamp) {
 
 // Transform HH:MM:SS.MS duration format to number of seconds
 /* Regex Description:
-    ^[1-9][0-9]*$       any number larger than 0
+    ^[0-9]+        any number larger than 0
+    [:]                 followed by :
     [0-5][0-9]          any number less than 59 and greater than 0
+    [:]                 followed by :
+    [0-5][0-9]          any number less than 59 and greater than 0
+    (                   optionally followed by...
+    [.]                 .
+    [0-9]+              any number larger than 0
+    )
 */
 function durToSec(dur) {
-  // Log error if 
-  if (/(^[1-9][0-9]*$):[0-5][0-9]:[0-5][0-9]/g.test(dur)) {
+  if (/^[0-9]+[:][0-5][0-9][:][0-5][0-9]([.][0-9]+)*$/.test(dur)) {
+    return moment.duration(dur).asSeconds();
+  }
+  else {
     return {
       error: 'INVALID DURATION: ' + dur
     }
   }
-  else {
-    return moment.duration(dur).asSeconds();
-  }
 }
 
+// Adds two numbers together
+// Return error if either argument is not a number.
 function addSeconds(sec1, sec2) {
   if (!_isNumber(sec1)) {
     return {
@@ -50,11 +59,11 @@ function addSeconds(sec1, sec2) {
       error: `INVALID DURATION: #{sec2}`
     }
   } else {
-    console.error(sec1, sec2)
     return (sec1 + sec2).toFixed(3);
   }
 }
 
+// Check if argument is a number.
 function _isNumber(num) {
   return Number(parseFloat(num)) === num;
 }

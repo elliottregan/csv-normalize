@@ -11,7 +11,9 @@ const rl = readline.createInterface({
 
 let header = false;
 
+// Read, process, and write one line at a time. 
 rl.on('line', (lineData) => {
+  // Process only the first line as a header
   if (!header) {
     process.stdout.write(dataNormSvc.processHeader(lineData) + '\n');
     header = true;
